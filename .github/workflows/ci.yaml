@@ -37,18 +37,18 @@ jobs:
         env:
           ECR_REGISTRY: public.ecr.aws
           ECR_REPOSITORY: q4s6t3k6/labs-gitops
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Criamos o Short SHA (ex: 41903bb)
-          SHORT_SHA=${IMAGE_TAG::7}
+          # Criamos a variável do SHA curto aqui dentro do shell
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./python
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # Build e Push usando o SHA longo (segurança)
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} ./python
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
           
-          # 1. Atualiza a imagem com o SHA LONGO (para o Kubernetes achar o arquivo)
-          sed -i "s|image:.*|image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" k8s/python-flask.yaml
+          # SED 1: Imagem no K8s usa o SHA longo
+          sed -i "s|image:.*|image: $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}|g" k8s/python-flask.yaml
           
-          # 2. Atualiza a versão com o SHORT SHA (para o Datadog ficar bonito)
+          # SED 2: Versão no Datadog usa o SHORT SHA
           sed -i "s|tags.datadoghq.com/version:.*|tags.datadoghq.com/version: \"$SHORT_SHA\"|g" k8s/python-flask.yaml
 
       - name: Commit and Push Changes
