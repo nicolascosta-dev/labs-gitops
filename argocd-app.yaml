@@ -1,3 +1,23 @@
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: lab-app
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: 'https://github.com/nicolascosta-dev/labs-gitops.git' # Coloque a URL do seu repo aqui
+#     targetRevision: HEAD
+#     path: k8s # A pasta onde está o nosso deployment.yaml
+#   destination:
+#     server: 'https://kubernetes.default.svc' # Aponta para o próprio cluster onde o Argo está rodando
+#     namespace: default # Onde a aplicação vai rodar de fato
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+
+# PARTE 1: A Definição da sua Aplicação no ArgoCD
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -6,13 +26,48 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/nicolascosta-dev/labs-gitops.git' # Coloque a URL do seu repo aqui
+    repoURL: 'https://github.com/nicolascosta-dev/labs-gitops.git'
     targetRevision: HEAD
-    path: k8s # A pasta onde está o nosso deployment.yaml
+    path: k8s 
   destination:
-    server: 'https://kubernetes.default.svc' # Aponta para o próprio cluster onde o Argo está rodando
-    namespace: default # Onde a aplicação vai rodar de fato
+    server: 'https://kubernetes.default.svc'
+    namespace: default
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# PARTE 2: O Patch do Service para Integração com Datadog (OpenMetrics)
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-application-controller
+  namespace: argocd
+  annotations:
+    # O Agent do Datadog lê estas annotations para iniciar a coleta automaticamente
+    ad.datadoghq.com/argocd-application-controller.check_names: '["openmetrics"]'
+    ad.datadoghq.com/argocd-application-controller.init_configs: '[{}]'
+    ad.datadoghq.com/argocd-application-controller.instances: |
+      [
+        {
+          "openmetrics_endpoint": "http://%%host%%:8082/metrics",
+          "namespace": "argocd",
+          "metrics": [
+            "argocd_app_info",
+            "argocd_app_sync_status",
+            "argocd_app_health_status",
+            "argocd_cluster_api_resource_objects"
+          ]
+        }
+      ]
+spec:
+  # O selector garante que estamos apontando para os Pods corretos do Controller
+  selector:
+    app.kubernetes.io/name: argocd-application-controller
+  ports:
+  - name: metrics
+    port: 8082
+    targetPort: 8082
