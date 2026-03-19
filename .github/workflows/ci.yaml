@@ -28,14 +28,15 @@ jobs:
       - name: Build and Push Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: public.ecr.aws/q4s6t3k6/labs-gitops # <--- COLOQUE O NOME DO REPO AQUI
+          # REMOVA o 'public.ecr.aws/' daqui:
+          ECR_REPOSITORY: q4s6t3k6/labs-gitops 
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build usando a pasta python/src como contexto
+          # Agora o comando vai montar corretamente: public.ecr.aws / q4s6t3k6/labs-gitops : tag
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./python/src
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
-          # Atualiza o manifesto k8s/python-flask.yaml (Imagem e Versão Datadog)
+          # O sed também vai funcionar com o caminho limpo
           sed -i "s|image: .*|image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" k8s/python-flask.yaml
           sed -i "s|tags.datadoghq.com/version: .*|tags.datadoghq.com/version: \"$IMAGE_TAG\"|g" k8s/python-flask.yaml
 
