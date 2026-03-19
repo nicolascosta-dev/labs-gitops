@@ -25,20 +25,17 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: public
+          
       - name: Build and Push Image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # REMOVA o 'public.ecr.aws/' daqui:
-          ECR_REPOSITORY: q4s6t3k6/labs-gitops 
+          # Se o 'registry-type: public' estiver ativo no login, 
+          # a variável abaixo deve ser exatamente 'public.ecr.aws'
+          ECR_REGISTRY: public.ecr.aws
+          ECR_REPOSITORY: q4s6t3k6/labs-gitops
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Agora o comando vai montar corretamente: public.ecr.aws / q4s6t3k6/labs-gitops : tag
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./python/src
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          
-          # O sed também vai funcionar com o caminho limpo
-          sed -i "s|image: .*|image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" k8s/python-flask.yaml
-          sed -i "s|tags.datadoghq.com/version: .*|tags.datadoghq.com/version: \"$IMAGE_TAG\"|g" k8s/python-flask.yaml
 
       - name: Commit and Push Changes
         run: |
