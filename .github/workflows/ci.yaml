@@ -25,7 +25,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: public
-          
+
       - name: Build and Push Image
         env:
           # Se o 'registry-type: public' estiver ativo no login, 
@@ -34,7 +34,7 @@ jobs:
           ECR_REPOSITORY: q4s6t3k6/labs-gitops
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./python/src
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./python/
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Commit and Push Changes
