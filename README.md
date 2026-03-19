@@ -1,0 +1,1 @@
+# Labs GitOps - ECR & ArgoCD

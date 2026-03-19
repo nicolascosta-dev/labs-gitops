@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lab-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/nicolascosta-dev/labs-gitops.git' # Coloque a URL do seu repo aqui
+    targetRevision: HEAD
+    path: k8s # A pasta onde está o nosso deployment.yaml
+  destination:
+    server: 'https://kubernetes.default.svc' # Aponta para o próprio cluster onde o Argo está rodando
+    namespace: default # Onde a aplicação vai rodar de fato
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

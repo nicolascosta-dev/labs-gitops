@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-flask
+  labels:
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "python-flask"
+    tags.datadoghq.com/version: "1.0.0"
+    teste: "labsnicolas"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-flask
+  template:
+    metadata:
+      labels:
+        app: python-flask
+        namespace: labsnicolas
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "python-flask"
+        tags.datadoghq.com/version: "1.0.2"
+        tags.datadoghq.com/team: "labsnicolas"
+      # annotations:
+        # ad.datadoghq.com/python-flask.logs: '[{"source":"python", "service":"python-flask"}]'
+    spec:
+      containers:
+      - name: python-flask
+        image: python-flask:labsnicolas
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_ENV
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/env']
+          - name: DD_SERVICE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/service']
+          - name: DD_VERSION
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/version']  
+          - name: DD_RUNTIME_METRICS_ENABLE
+            value: "true"
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 64Mi
+          limits:
+            cpu: 300m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-flask
+spec:
+  type: LoadBalancer
+  selector:
+    app: python-flask
+  ports:
+  - name: http
+    port: 8082
+    targetPort: 5000
