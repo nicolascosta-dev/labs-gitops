@@ -24,8 +24,8 @@ spec:
     spec:
       containers:
       - name: python-flask
-        image: nicolascosta/python-flask/public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
-        imagePullPolicy: Always
+        image: public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
+        imagePullPolicy: Never
         ports:
         - containerPort: 5000
         env:
