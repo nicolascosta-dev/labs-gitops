@@ -2,29 +2,36 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: argocd-notifications-cm
-  namespace: argocd # Deve ser o mesmo namespace onde o ArgoCD está instalado
+  namespace: argocd
 data:
-  service.webhook.datadog: |
-    url: https://webhook-intake.datadoghq.com/api/v2/webhook/
+  # Alterado o nome do serviço para cd-visibility-webhook conforme a doc
+  service.webhook.cd-visibility-webhook: |
+    url: https://webhook-intake.datadoghq.com/api/v2/webhook
     headers:
-      - name: DD-API-KEY
-        value: $dd-api-key # Isso vai ler a chave que você salvou no secret
-      - name: Content-Type
-        value: application/json
+      - name: "DD-CD-PROVIDER-ARGOCD"
+        value: "true"
+      - name: "DD-API-KEY"
+        value: $dd-api-key
+      - name: "Content-Type"
+        value: "application/json"
 
-  template.datadog-cd-visibility: |
+  # Template oficial que envia metadados completos do commit
+  template.cd-visibility-template: |
     webhook:
-      datadog:
+      cd-visibility-webhook:
         method: POST
         body: |
           {
-            "service": "{{.app.metadata.name}}",
-            "env": "production",
-            "repository_url": "{{.app.spec.source.repoURL}}",
-            "commit_sha": "{{.app.status.sync.revision}}",
-            "status": "{{.app.status.operationState.phase}}"
+            "app": {{toJson .app}},
+            "context": {{toJson .context}},
+            "service_type": {{toJson .serviceType}},
+            "recipient": {{toJson .recipient}},
+            "commit_metadata": {{toJson (call .repo.GetCommitMetadata .app.status.operationState.syncResult.revision)}}
           }
 
-  trigger.on-deployed: |
-    - when: app.status.operationState.phase in ['Succeeded', 'Failed', 'Error']
-      send: [datadog-cd-visibility]
+  # Trigger aprimorado para monitorar tanto o Sync quanto a Saúde (Health)
+  trigger.cd-visibility-trigger: |
+    - when: app.status.operationState.phase in ['Succeeded', 'Failed', 'Error'] and app.status.health.status in ['Healthy', 'Degraded']
+      send: [cd-visibility-template]
+    - when: app.status.operationState.phase == 'Running' and app.status.health.status in ['Healthy', 'Degraded']
+      send: [cd-visibility-template]

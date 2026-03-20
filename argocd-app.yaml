@@ -1,30 +1,12 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: lab-app
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: 'https://github.com/nicolascosta-dev/labs-gitops.git' # Coloque a URL do seu repo aqui
-#     targetRevision: HEAD
-#     path: k8s # A pasta onde está o nosso deployment.yaml
-#   destination:
-#     server: 'https://kubernetes.default.svc' # Aponta para o próprio cluster onde o Argo está rodando
-#     namespace: default # Onde a aplicação vai rodar de fato
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-
-# PARTE 1: A Definição da sua Aplicação no ArgoCD
+# PARTE 1: Definição da Aplicação com o Gatilho Oficial da Datadog
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: lab-app
   namespace: argocd
-  annotations: # <--- ADICIONE ESTA LINHA
-    notifications.argoproj.io/subscribe.on-deployed.datadog: ""
+  annotations:
+    # Esta anotação vincula a App ao trigger 'cd-visibility-trigger' que criamos no ConfigMap
+    notifications.argoproj.io/subscribe.cd-visibility-trigger.cd-visibility-webhook: ""
 spec:
   project: default
   source:
@@ -42,14 +24,14 @@ spec:
       - CreateNamespace=true
 
 ---
-# PARTE 2: O Patch do Service para Integração com Datadog (OpenMetrics)
+# PARTE 2: Patch do Service para Coleta de Métricas DORA (OpenMetrics)
 apiVersion: v1
 kind: Service
 metadata:
   name: argocd-application-controller
   namespace: argocd
   annotations:
-    # O Agent do Datadog lê estas annotations para iniciar a coleta automaticamente
+    # O Agent do Datadog detecta estas anotações e começa a ler os dados do ArgoCD
     ad.datadoghq.com/argocd-application-controller.check_names: '["openmetrics"]'
     ad.datadoghq.com/argocd-application-controller.init_configs: '[{}]'
     ad.datadoghq.com/argocd-application-controller.instances: |
@@ -66,7 +48,6 @@ metadata:
         }
       ]
 spec:
-  # O selector garante que estamos apontando para os Pods corretos do Controller
   selector:
     app.kubernetes.io/name: argocd-application-controller
   ports:
