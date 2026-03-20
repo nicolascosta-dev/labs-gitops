@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: DeploiementErrado #Deployment
+kind: ErroTotal #Deployment
 metadata:
   name: python-flask
   labels:
@@ -73,3 +73,4 @@ spec:
   - name: http
     port: 8082
     targetPort: 5000
+# trigger-fail-1774023554
