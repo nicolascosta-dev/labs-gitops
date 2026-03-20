@@ -5,7 +5,7 @@ metadata:
   labels:
     tags.datadoghq.com/env: "dev"
     tags.datadoghq.com/service: "python-flask"
-    tags.datadoghq.com/version: "8d59a06"
+    tags.datadoghq.com/version: "2481861"
 spec:
   replicas: 1
   selector:
@@ -17,14 +17,14 @@ spec:
         app: python-flask
         tags.datadoghq.com/env: "dev"
         tags.datadoghq.com/service: "python-flask"
-        tags.datadoghq.com/version: "8d59a06"
+        tags.datadoghq.com/version: "2481861"
         tags.datadoghq.com/owner: "gitops"
       # annotations:
         # ad.datadoghq.com/python-flask.logs: '[{"source":"python", "service":"python-flask"}]'
     spec:
       containers:
       - name: python-flask
-        image: public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
+        image: public.ecr.aws/q4s6t3k6/labs-gitops:24818616fcc68f595d503a6659c468f52a5aed87
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
