@@ -7,7 +7,7 @@ metadata:
     tags.datadoghq.com/service: "python-flask"
     tags.datadoghq.com/version: "8d59a06"
 spec:
-  replicas: testeando
+  replicas: 1
   selector:
     matchLabels:
       app: python-flask
