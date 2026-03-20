@@ -4,7 +4,7 @@ metadata:
   name: argocd-notifications-cm
   namespace: argocd
 data:
-  # Alterado o nome do serviço para cd-visibility-webhook conforme a doc
+  # SERVIÇO: Configuração do Webhook para o Datadog
   service.webhook.cd-visibility-webhook: |
     url: https://webhook-intake.datadoghq.com/api/v2/webhook
     headers:
@@ -15,7 +15,7 @@ data:
       - name: "Content-Type"
         value: "application/json"
 
-  # Template oficial que envia metadados completos do commit
+  # TEMPLATE: Formatação dos dados enviados
   template.cd-visibility-template: |
     webhook:
       cd-visibility-webhook:
@@ -26,12 +26,18 @@ data:
             "context": {{toJson .context}},
             "service_type": {{toJson .serviceType}},
             "recipient": {{toJson .recipient}},
-            "commit_metadata": {{toJson (call .repo.GetCommitMetadata .app.status.operationState.syncResult.revision)}}
+            "commit_metadata": {{toJson (call .repo.GetCommitMetadata .app.status.sync.revision)}}
           }
+          # ALTERAÇÃO 1: Alterado de .app.status.operationState... para .app.status.sync.revision.
+          # MOTIVO: O campo operationState desaparece após o sync, causando erro de "nil". 
+          # O campo .sync.revision é estável e sempre contém o SHA do commit atual.
 
-  # Trigger aprimorado para monitorar tanto o Sync quanto a Saúde (Health)
+  # TRIGGER: Regras de quando enviar a notificação
   trigger.cd-visibility-trigger: |
-    - when: app.status.operationState.phase in ['Succeeded', 'Failed', 'Error'] and app.status.health.status in ['Healthy', 'Degraded']
+    - when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded', 'Failed', 'Error']
       send: [cd-visibility-template]
-    - when: app.status.operationState.phase == 'Running' and app.status.health.status in ['Healthy', 'Degraded']
+    - when: app.status.operationState != nil and app.status.operationState.phase == 'Running'
       send: [cd-visibility-template]
+    # ALTERAÇÃO 2: Adicionado "app.status.operationState != nil" antes de verificar a phase.
+    # MOTIVO: Isso evita o erro "cannot fetch phase from <nil>" que vimos no seu log. 
+    # Agora o ArgoCD só tenta ler a 'phase' se ela realmente existir no objeto.
