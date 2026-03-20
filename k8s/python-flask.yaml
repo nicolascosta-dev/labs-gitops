@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DeploiementErrado #Deployment
 metadata:
   name: python-flask
   labels:
@@ -8,6 +8,8 @@ metadata:
     tags.datadoghq.com/version: "8d59a06"
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: python-flask
@@ -24,7 +26,7 @@ spec:
     spec:
       containers:
       - name: python-flask
-        image: versao-bugada-123
+        image: public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
         imagePullPolicy: Never
         ports:
         - containerPort: 5000
