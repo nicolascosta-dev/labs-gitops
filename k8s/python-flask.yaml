@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: ErroTotal #Deployment
+kind: Deployment
 metadata:
   name: python-flask
   labels:
@@ -27,7 +27,7 @@ spec:
       containers:
       - name: python-flask
         image: public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
