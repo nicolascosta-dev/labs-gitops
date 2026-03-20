@@ -23,6 +23,8 @@ kind: Application
 metadata:
   name: lab-app
   namespace: argocd
+  annotations: # <--- ADICIONE ESTA LINHA
+    notifications.argoproj.io/subscribe.on-deployed.datadog: ""
 spec:
   project: default
   source:
