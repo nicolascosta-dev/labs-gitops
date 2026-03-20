@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: python-flask
-        image: public.ecr.aws/q4s6t3k6/labs-gitops:8d59a06d5a9e210a459f11b20672b7c3eba478bd
+        image: versao-bugada-123
         imagePullPolicy: Never
         ports:
         - containerPort: 5000
